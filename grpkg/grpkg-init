@@ -1,0 +1,79 @@
+#!/usr/bin/env python3
+#
+#	Initialize a development directory for Gramps addons
+#
+# Copyright 2025, Al Stone <ahs3@ahs3.net>, All Rights Reserved.
+# SPDX-License-Identifier: GPL-2.0
+#
+
+import distutils
+import glob
+import os
+import subprocess
+import sys
+
+import grpkg_utils as utils
+
+COMMAND = "grpkg init"
+VERSION = "0.0.1"
+LICENSE = "SPDX-License-Identifier: GPL-2.0"
+
+DEBUG = False
+VERBOSE = False
+
+def description():
+    print(f"{COMMAND}: initialize a development directory for a Gramps addon")
+
+def usage():
+    print(f"usage: {COMMAND} <name>")
+    print("where:")
+    print("   <name>       Python module name to use for the addon")
+    print("                (use camel case, please)")
+
+def version():
+    print(f"{COMMAND}: v{VERSION}")
+
+def main():
+    """
+    Initialize a development directory for a gramps addon
+    """
+    global DEBUG, VERBOSE
+
+    args = []
+    for ii in sys.argv[1:]:
+        if ii == "-D" or ii == "--debug":
+            DEBUG = True
+        elif ii == "-v" or ii == "--verbose":
+            VERBOSE = True
+        else:
+            args.append(ii)
+    if DEBUG: print(f"INIT> {sys.argv}, {args}")
+
+    dirname = "."
+    for ii in args:
+        if ii == "-d" or ii == "--description":
+            description()
+            sys.exit(0)
+        elif ii == "-?" or ii == "-h" or ii == "--help":
+            usage()
+            sys.exit(0)
+        elif ii == "-V" or ii == "--version":
+            version()
+            sys.exit(0)
+        elif ii[0] == "-":
+            print(f"? no such option: {ii}")
+            sys.exit(0)
+        else:
+            dirname = os.path.basename(ii)
+
+    if dirname == ".":
+        print(f"? a directory name is required")
+        usage()
+    elif os.path.exists(dirname):
+        print(f"? development directory already exists: {dirname}")
+    else:
+        if VERBOSE: print(f"creating development directory \"{dirname}\"")
+        os.makedirs(dirname)
+
+if __name__ == "__main__":
+    main()

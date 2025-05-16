@@ -1,0 +1,142 @@
+#!/usr/bin/env python3
+#
+#	Execute commands to manipulate Gramps addon "packages"
+#   during development
+#
+# Copyright 2025, Al Stone <ahs3@ahs3.net>, All Rights Reserved.
+# SPDX-License-Identifier: GPL-2.0
+#
+
+import distutils
+import glob
+import os
+import shutil
+import subprocess
+import sys
+
+import grpkg_utils as utils
+
+ROOTNAME = "grpkg"
+VERSION = "0.0.1"
+LICENSE = "SPDX-License-Identifier: GPL-2.0"
+
+DEBUG = False
+VERBOSE = False
+
+def print_debug(msg):
+    global DEBUG
+
+    if DEBUG:
+        print(msg, file=sys.stderr)
+        sys.stderr.flush()
+
+def print_verbose(msg):
+    global VERBOSE
+
+    if VERBOSE:
+        print(msg, file=sys.stdout)
+        sys.stdout.flush()
+
+def invoke_one (subcmd, args):
+    if not subcmd:
+        print("? INTERNAL ERROR: invoke_one called with no subcommand")
+        sys.exit(1)
+    else:
+        sub = utils.find_subcommand(subcmd)
+    cmd = [sub]
+    if args:
+        cmd.extend(args)
+    try:
+        env = utils.extend_path()
+        res = subprocess.run(cmd, env=env,
+                             capture_output=True, text=True, check=True)
+    except subprocess.CalledProcessError as cpe:
+        print(f"? failure in {args[0]}, exit {cpe.returncode}")
+        print(f"   cmdline: {cpe.cmd}")
+        print(f"   stdout:")
+        print(f"   stderr:")
+        sys.exit(1)
+    except FileNotFoundError as fnf:
+        print(f"? no such command: {args[0]} {args[1]}")
+        sys.exit(1)
+
+    print_debug(f"ONE res>\n{res.stdout}")
+    return res
+    
+def invoke_many(title, lst, args):
+    subcommands = utils.findem()
+    if title:
+        print()
+        print(f"{title}")
+    for ii in lst:
+        sub = subcommands[ii]["sub"]
+        res = invoke_one(sub, args)
+        fields = res.stdout.split(":")
+        info = ""
+        for jj in fields[1:]:
+            info += jj.strip() + " "
+        print(f"    {sub:10s}   {info}")
+
+def print_description():
+    print(f"{ROOTNAME}: tools to help develop and package Gramps addons")
+
+def print_help():
+    print(f"usage: {ROOTNAME} {{ <command> [<option>...] | [<global-option>...] }}")
+    print(f"global options are:")
+    print(f"   -?|-h|--help   display this message")
+    print(f"   -D|--debug     display some debug messages")
+    print(f"   -v|--verbose   be noisy whilst busy")
+    print(f"   -V|--version   display version numbers for all known components")
+    
+    cmds = utils.findem()
+    invoke_many("Known commands:", cmds.items(), ["--DESCRIPTION"])
+
+    print()
+    print("To get help for individual commands:")
+    print(f"   $ {ROOTNAME} <command> --help")
+
+def print_version(args):
+    print(f"{ROOTNAME} v{VERSION}, {LICENSE}")
+
+    cmds = utils.findem()
+    invoke_many("Command versions:", cmds.keys(), args)
+
+def main():
+    """
+    We don't actually do much of anything in this code -- well, maybe
+    set up some environmental things.  The job here is just to find the
+    scripts/executables that we really want to execute, and then run
+    them, passing in any info we need to.
+    """
+    global DEBUG, VERSION
+
+    args = utils.Args()
+    if args.debug == True:
+        DEBUG = True
+    if args.verbose == True:
+        VERBOSE = True
+    if len(sys.argv) >= 2 and args.subcommand:
+        subcommands = utils.findem()
+        print_debug("grpkg> got subcmd")
+        if utils.is_subcommand(args.subcommand):
+            other_args = sys.argv[1:]
+            other_args.remove(args.subcommand)
+            msg = f"grpkg RUN> {ROOTNAME} {args.subcommand} {other_args}"
+            print_debug(msg)
+            res = invoke_one(args.subcommand, other_args)
+            print(f"{res.stdout.strip()}")
+        else:
+            print(f"? no such command: {ROOTNAME} {sys.argv[1]}")
+            sys.exit(1)
+    else:
+        if args.help == True:
+            args.print_help()
+        elif args.version:
+            print_version(["--version"])
+        elif args.description == True:
+            print_description()
+        else:
+            print("main: do the default")
+
+if __name__ == "__main__":
+    main()
