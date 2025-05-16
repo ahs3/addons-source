@@ -1,0 +1,7 @@
+Add new tests by adding modules (e.g., globals.py) and
+adding the module name and TestClass to the modules file.
+
+The file syntax is:
+
+	<module name>: <test class> [, <test class>]...
+

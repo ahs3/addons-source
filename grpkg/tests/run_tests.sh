@@ -6,4 +6,4 @@
 SOURCEDIR="../"
 export PATH=$PATH:$SOURCEDIR
 
-./grtests $*
+./grsuite
