@@ -27,7 +27,6 @@ usage () {
 	echo "   -V|--version    version of the this command"
 }
 
-set -x
 declare -a ARGS
 declare -a OPTIONS
 ARGS=( $@ )
@@ -46,7 +45,7 @@ done
 for ii in ${OPTIONS[@]}
 do
 	case $ii in
-	-\?|-h|--help)
+	-h|--help)
 		usage
 		exit 0
 		;;
