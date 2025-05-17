@@ -24,7 +24,7 @@ def main():
 
     # import the modules and their test cases
     loader = unittest.TestLoader()
-    runner = unittest.TextTestRunner()
+    runner = unittest.TextTestRunner(verbosity=3)
     total_tests = 0
     total_run = 0
     total_errors = 0
