@@ -1,3 +1,7 @@
+To run the tests:
+
+	$ ./run-tests.sh
+
 Add new tests by adding modules (e.g., globals.py) and
 adding the module name and TestClass to the modules file.
 
