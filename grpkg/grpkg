@@ -125,6 +125,8 @@ def main():
             print_debug(msg)
             res = invoke_one(args.subcommand, other_args)
             print(f"{res.stdout.strip()}")
+            if "-h" in other_args or "--help" in other_args:
+                utils.print_global_args()
         else:
             print(f"? no such command: {ROOTNAME} {sys.argv[1]}")
             sys.exit(1)

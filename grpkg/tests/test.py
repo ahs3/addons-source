@@ -30,6 +30,19 @@ class TestTestArgs(unittest.TestCase):
     DESCRIPTION = """grpkg test: run a simple test case
 """
 
+    HELP = """usage: grpkg test {<case>|-v|--version}
+
+where:
+   <case>          name of the test case
+
+global options are:
+   -d|--description    display one line description
+   -D|--debug          display some debug messages
+   -h|--help           display this message
+   -v|--verbose        be noisy whilst busy
+   -V|--version        display version numbers for all known components
+"""
+
     VERSION = """grpkg test: v20250512-1
 """
 
@@ -57,6 +70,16 @@ class TestTestArgs(unittest.TestCase):
         res = run_cmd([ROOTNAME, "test", "--description"])
         self.assertTrue(len(res.stdout)>0)
         self.assertEqual(res.stdout, TestTestArgs.DESCRIPTION)
+
+    def test_h_arg(self):
+        res = run_cmd([ROOTNAME, "test", "-h"])
+        self.assertTrue(len(res.stdout)>0)
+        self.assertEqual(res.stdout, TestTestArgs.HELP)
+
+    def test_help_arg(self):
+        res = run_cmd([ROOTNAME, "test", "--help"])
+        self.assertTrue(len(res.stdout)>0)
+        self.assertEqual(res.stdout, TestTestArgs.HELP)
 
     def test_v_arg(self):
         res = run_cmd([ROOTNAME, "test", "-v"])

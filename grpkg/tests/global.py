@@ -36,8 +36,14 @@ Command versions:
     test         v20250512-1 
 """
 
-    HELP="""
-usage: grpkg [<subcommand>] [<option>...]
+    HELP="""usage: grpkg { <command> [<option>...] | [<global-option>...] }
+
+global options are:
+   -d|--description    display one line description
+   -D|--debug          display some debug messages
+   -h|--help           display this message
+   -v|--verbose        be noisy whilst busy
+   -V|--version        display version numbers for all known components
 
 Tools for Gramps addon development
 
@@ -72,6 +78,18 @@ Use grpkg <subcommand> --help for command specific information
         res = run_cmd([ROOTNAME, "--description"])
         self.assertTrue(len(res.stdout)>0)
         self.assertEqual(res.stdout, TestGlobalArgs.DESCRIPTION)
+
+    def test_h_arg(self):
+        res = run_cmd([ROOTNAME, "-h"])
+        self.maxDiff = None
+        self.assertTrue(len(res.stdout)>0)
+        self.assertEqual(res.stdout, TestGlobalArgs.HELP)
+
+    def test_help_arg(self):
+        res = run_cmd([ROOTNAME, "--help"])
+        self.maxDiff = None
+        self.assertTrue(len(res.stdout)>0)
+        self.assertEqual(res.stdout, TestGlobalArgs.HELP)
 
     def test_v_arg(self):
         res = run_cmd([ROOTNAME, "-v"])

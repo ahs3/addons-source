@@ -24,7 +24,6 @@ usage () {
 	echo
 	echo "where:"
 	echo "   <case>          name of the test case"
-	echo "   -V|--version    version of the this command"
 }
 
 declare -a ARGS

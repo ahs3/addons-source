@@ -53,8 +53,10 @@ def main():
     for ii in args:
         if ii == "-d" or ii == "--description":
             description()
-        elif ii == "-?" or ii == "-h" or ii == "--help":
+            sys.exit(0)
+        elif ii == "-h" or ii == "--help":
             usage()
+            sys.exit()
         elif ii == "-V" or ii == "--version":
             version()
             sys.exit(0)

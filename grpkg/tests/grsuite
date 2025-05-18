@@ -5,42 +5,69 @@
 
 import importlib
 import unittest
+import sys
 
 MODULE_LIST = "modules"
 
 def main():
-    # find out which modules/classes we need to run as tests
-    mods = {}
-    with open(MODULE_LIST, "r") as fd:
-        for ln in fd:
-            mod = ln.strip().split(":")
-            if len(mod) != 2:
-                print(f"? bad module definition => {mod}")
-                continue
-            if mod[0] not in mods:
-                mods[mod[0]] = [ii.strip() for ii in mod[1].split(",")]
-    fd.close()
-    modules = sorted(mods)
-
-    # import the modules and their test cases
-    loader = unittest.TestLoader()
-    runner = unittest.TextTestRunner(verbosity=3)
     total_tests = 0
     total_run = 0
     total_errors = 0
     total_failures = 0
-    for ii in modules:
-        suite = loader.loadTestsFromModule(importlib.import_module(ii))
-        count = suite.countTestCases()
-        total_tests += count
-        print("========================================================")
-        print(f"Test Suite: {ii}")
-        print(f"{count} tests found")
-        print("========================================================")
-        result = runner.run(suite)
-        total_run += result.testsRun
-        total_errors += len(result.errors)
-        total_failures += len(result.failures)
+
+    # find out which modules/classes we need to run as tests
+    if len(sys.argv) > 1:
+        """
+        load only the test cases specified
+        """
+        for ii in sys.argv[1:]:
+            loader = unittest.TestLoader()
+            runner = unittest.TextTestRunner(verbosity=3)
+            suite = loader.loadTestsFromName(ii)
+            count = suite.countTestCases()
+            total_tests += count
+            print("========================================================")
+            print(f"Test Suite: {ii}")
+            s = ""
+            if count > 1:
+                s = "s"
+            print(f"{count} test{s} found")
+            print("========================================================")
+            result = runner.run(suite)
+            total_run += result.testsRun
+            total_errors += len(result.errors)
+            total_failures += len(result.failures)
+    else:
+        mods = {}
+        with open(MODULE_LIST, "r") as fd:
+            for ln in fd:
+                mod = ln.strip().split(":")
+                if len(mod) != 2:
+                    print(f"? bad module definition => {mod}")
+                    continue
+                if mod[0] not in mods:
+                    mods[mod[0]] = [ii.strip() for ii in mod[1].split(",")]
+        fd.close()
+        modules = sorted(mods)
+
+        # import the modules and their test cases
+        for ii in modules:
+            loader = unittest.TestLoader()
+            runner = unittest.TextTestRunner(verbosity=3)
+            suite = loader.loadTestsFromModule(importlib.import_module(ii))
+            count = suite.countTestCases()
+            total_tests += count
+            print("========================================================")
+            print(f"Test Suite: {ii}")
+            s = ""
+            if count > 1:
+                s = "s"
+            print(f"{count} test{s} found")
+            print("========================================================")
+            result = runner.run(suite)
+            total_run += result.testsRun
+            total_errors += len(result.errors)
+            total_failures += len(result.failures)
 
     print("\n========================================================")
     print(f"Total Test Cases: {total_tests}")

@@ -67,6 +67,14 @@ def find_subcommand(sub=None):
 def is_subcommand(cmd):
     return ROOTNAME+"-"+cmd in subcommands
 
+def print_global_args():
+    print(f"\nglobal options are:")
+    print(f"   -d|--description    display one line description")
+    print(f"   -D|--debug          display some debug messages")
+    print(f"   -h|--help           display this message")
+    print(f"   -v|--verbose        be noisy whilst busy")
+    print(f"   -V|--version        display version numbers for all known components")
+ 
 class UsageAction(argparse.Action):
     def __init__(self,
                  option_strings,
@@ -95,12 +103,7 @@ class UsageAction(argparse.Action):
         setattr(namespace, self.dest, values)
 
         print(f"usage: {ROOTNAME} {{ <command> [<option>...] | [<global-option>...] }}")
-        print(f"\nglobal options are:")
-        print(f"   -d|--description    display one line description")
-        print(f"   -D|--debug          display some debug messages")
-        print(f"   -h|--help           display this message")
-        print(f"   -v|--verbose        be noisy whilst busy")
-        print(f"   -V|--version        display version numbers for all known components")
+        print_global_args()
  
         print(f"\n{parser.description}")
         print("\nKnown subcommands:")
@@ -182,5 +185,5 @@ class Args:
             sys.exit(1)
 
     def print_help(self):
-        return self.parser.print_help()
+        self.parser.print_help()
 

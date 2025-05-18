@@ -34,7 +34,20 @@ where:
     DEFAULT_TEXT = "main: do the default\n" + NOARGS_TEXT
 
     DESCRIPTION = """grpkg init: initialize a development directory for a Gramps addon
-""" + NOARGS_TEXT
+"""
+
+    HELP = """usage: grpkg init <name>
+where:
+   <name>       Python module name to use for the addon
+                (use camel case, please)
+
+global options are:
+   -d|--description    display one line description
+   -D|--debug          display some debug messages
+   -h|--help           display this message
+   -v|--verbose        be noisy whilst busy
+   -V|--version        display version numbers for all known components
+"""
 
     VERSION = """grpkg init: v0.0.1
 """
@@ -68,6 +81,16 @@ where:
         res = run_cmd([ROOTNAME, "init", "--description"])
         self.assertTrue(len(res.stdout)>0)
         self.assertEqual(res.stdout, TestInitArgs.DESCRIPTION)
+
+    def test_h_arg(self):
+        res = run_cmd([ROOTNAME, "init", "-h"])
+        self.assertTrue(len(res.stdout)>0)
+        self.assertEqual(res.stdout, TestInitArgs.HELP)
+
+    def test_help_arg(self):
+        res = run_cmd([ROOTNAME, "init", "--help"])
+        self.assertTrue(len(res.stdout)>0)
+        self.assertEqual(res.stdout, TestInitArgs.HELP)
 
     def test_v_arg(self):
         res = run_cmd([ROOTNAME, "init", "-v"])
