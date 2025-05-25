@@ -388,6 +388,13 @@ def usage():
     print("            update the adddon with the latest translations for that")
     print("            language (e.g., for 'fr', AddOn/po/fr-local.po)")
     print("            in camel case); if <lang> is given, create an empty")
+    print()
+    print("        workspace <path> <addon>:")
+    print("            create a directory tree at <path> with all gramps")
+    print("            development source trees (gramps, addons-source, addons)")
+    print("            needed to develop a new addon; additionally, create the")
+    print("            AddOn source directory called <addon>, and add to it the")
+    print("            basic AddOn.py, AddOn.grp.py, MANIFEST, and localization")
     print("            files that are required.")
 
 
@@ -416,7 +423,7 @@ KNOWN_GRAMPS_VERSIONS = [
 
 gramps_version = sys.argv[1]
 if gramps_version not in KNOWN_GRAMPS_VERSIONS:
-    print(f"? {gramps_version} is not a supported version of gramps")
+    print(f"? '{gramps_version}' is not a supported version of gramps")
     sys.exit(1)
 
 command = sys.argv[2]
@@ -1119,6 +1126,148 @@ elif command == "extract-po":
     ]:
         print(addon)
         extract_po(addon)
+
+elif command == "workspace":
+    import subprocess
+
+    def is_camel_case(s):
+        return s != s.lower() and s != s.upper() and "_" not in s
+
+    def addon_template(path, addon):
+        addonpy = os.path.join(path, f"{addon}.py")
+        if os.path.exists(addonpy):
+            print(f"? {addon}.py exists, skipping step...")
+        else:
+            with open(addonpy, "w+") as fd:
+                print(f"#/usr/bin/env python3", file=fd)
+                print(f"#", file=fd)
+                print(f"#   Add your code here", file=fd)
+                print(f"#", file=fd)
+            fd.close()
+
+    def gpr_template(path, addon):
+        addongpr = os.path.join(path, f"{addon}.gpr.py")
+        if os.path.exists(addongpr):
+            print(f"? {addon}.gpr.py exists, skipping step...")
+        else:
+            with open(addongpr, "w+") as fd:
+                print(f"#", file=fd)
+                print(f"#   Registration file for addon {addon}", file=fd)
+                print(f"#", file=fd)
+                fd.write(f"""
+register(TOOL,                                     # change to the proper type
+    id    = '{addon}',
+    name  = _("{addon}"),
+    description =  _("describe {addon} here."),    # add details here
+    version = '1.0.0',
+    gramps_target_version = '6.0',
+    status = STABLE,
+    fname = '{addon}.py',
+    authors = ["John Doe"],                        # your name here
+    authors_email = ["john.doe@example.com"],      # your email here
+    maintainers = ["John Doe"],                    # maintainer's name here
+    maintainers_email = ["john.doe@example.com"],  # maintainer's email here
+    category = TOOL_DBPROC,                        # change as needed
+    toolclass = '{addon}Window',                   # change as needed
+    optionclass = '{addon}Options',                # change as needed
+    tool_modes = [TOOL_MODE_GUI],                  # change as needed
+    help_url = "Addon:{addon}Tool"                 # change as needed
+)
+""")
+            fd.close()
+
+    if gramps_version < "gramps60":
+        print(f"? workspace command not supported for '{gramps_version}'")
+        exit(1)
+
+    # build the directory structure
+    if len(sys.argv) < 5:
+        print("? workspace requires a <path> and an <addon> name.")
+        exit(1)
+    path = os.path.expandvars(os.path.expanduser(sys.argv[3]))
+    if os.path.exists(path):
+        if os.path.isdir(path):
+            print(f"workspace path '{sys.argv[3]}' already exists, reusing...")
+        else:
+            print(f"? workspace path '{sys.argv[3]}' already exists, but not a directory")
+            exit(1)
+    else:
+        os.makedirs(path)
+
+    # get the addon name; we'll need to make a directory for it later
+    addon = sys.argv[4]
+    if not is_camel_case(addon):
+        print(f"? addon name must be camel case, not '{addon}'")
+        exit(1)
+
+    # collect a copy of the gramps source tree
+    where = os.path.join(path, "gramps")
+    print("gather up gramps source tree...")
+    gitcmd = []
+    cwd = path
+    if os.path.exists(os.path.join(where, ".git")):
+        gitcmd = [
+            "git", "fetch",
+        ]
+        cwd = os.path.join(cwd, "gramps")
+    else:
+        gitcmd = [
+            "git", "clone",
+            "-b", f"maintenance/{gramps_version}",
+            "https://github.com/gramps-project/gramps.git",
+        ]
+    res = subprocess.run(gitcmd, cwd=cwd, text=True)
+
+    # collect a copy of the addons-source source tree
+    where = os.path.join(path, "addons-source")
+    print("gather up addons-source tree...")
+    gitcmd = []
+    cwd = path
+    if os.path.exists(os.path.join(where, ".git")):
+        gitcmd = [
+            "git", "fetch",
+        ]
+        cwd = os.path.join(cwd, "addons-source")
+    else:
+        gitcmd = [
+            "git", "clone",
+            "-b", f"maintenance/{gramps_version}",
+            "https://github.com/gramps-project/addons-source.git",
+        ]
+    res = subprocess.run(gitcmd, cwd=cwd, text=True)
+
+    # collect a copy of the addons source tree
+    where = os.path.join(path, "addons")
+    print("gather up addons tree...")
+    gitcmd = []
+    cwd = path
+    if os.path.exists(os.path.join(where, ".git")):
+        gitcmd = [
+            "git", "fetch",
+        ]
+        cwd = os.path.join(cwd, "addons")
+    else:
+        gitcmd = [
+            "git", "clone",
+            "https://github.com/gramps-project/addons.git",
+        ]
+    res = subprocess.run(gitcmd, cwd=cwd, text=True)
+
+    # now we can make the addon directory
+    addonpath = os.path.join(path, "addons-source", addon)
+    if os.path.exists(addonpath):
+        if os.path.isdir(addonpath):
+            print(f"addon directory '{addon}' already exists, reusing...")
+        else:
+            print(f"? addon file '{addon}' exists, but not a directory")
+            exit(1)
+    else:
+        print(f"creating addon directory for '{addon}'...")
+        os.makedirs(addonpath)
+
+    # add in some templates if needed
+    addon_template(addonpath, addon)
+    gpr_template(addonpath, addon)
 
 else:
     print(f"? unknown command: {command}")
