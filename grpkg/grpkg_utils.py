@@ -7,14 +7,18 @@
 #
 
 import argparse
+import configparser
 import glob
 import os
 import subprocess
 import sys
 
+CONFIG_FILE_NAME = "grpkg.ini"
 ROOTNAME = "grpkg"
 
 extended_env = {}
+subcommands = {}
+
 def extend_path():
     global extended_env
 
@@ -28,7 +32,6 @@ def extend_path():
 def fixpath(p):
     return os.path.expanduser(os.path.expandvars(p))
 
-subcommands = {}
 def findem(pat=ROOTNAME):
     global subcommands
 
@@ -186,4 +189,47 @@ class Args:
 
     def print_help(self):
         self.parser.print_help()
+
+
+class GrConfig:
+    def __init__(self):
+        self.config = configparser.ConfigParser()
+        self.file_name = ""
+        home_config = os.path.join(os.path.join(os.environ["HOME"],
+                                                ".config",
+                                                ROOTNAME,
+                                                CONFIG_FILE_NAME))
+
+        if os.path.exists(CONFIG_FILE_NAME):
+            self.config.read(CONFIG_FILE_NAME)
+            self.file_name = CONFIG_FILE_NAME
+        elif os.path.exists(home_config):
+            self.config.read(home_config)
+            self.file_name = home_config
+        else:
+            os.makedirs(os.path.dirname(home_config), exist_ok=True)
+            self.config["DEFAULT"] = { "user": os.environ["USER"],
+                                       "workspace": os.environ["PWD"],
+                                     }
+            self.file_name = home_config
+
+    def get(self, section, item):
+        res = None
+        if section in self.config:
+            if item in self.config[section]:
+                res = self.config[section][item]
+        return res
+
+    def put(self, section, item, value):
+        if section in self.config:
+            if item in self.config[section]:
+                self.config[section][item] = str(value)
+        else:
+            self.config[section][item] = str(value)
+        return
+
+    def close(self):
+        print("got here")
+        with open(self.file_name, "w+") as cfd:
+            self.config.write(cfd)
 

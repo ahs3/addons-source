@@ -140,5 +140,10 @@ def main():
         else:
             print("main: do the default")
 
+    return
+
 if __name__ == "__main__":
+    config = utils.GrConfig()
     main()
+    config.close()
+
