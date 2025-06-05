@@ -208,8 +208,15 @@ class GrConfig:
             self.file_name = home_config
         else:
             os.makedirs(os.path.dirname(home_config), exist_ok=True)
+            gpath = os.path.normpath(os.path.join(os.environ["PWD"],
+                                                  "..",
+                                                  "gramps"
+                                                 )
+                                    )
             self.config["DEFAULT"] = { "user": os.environ["USER"],
                                        "workspace": os.environ["PWD"],
+                                       "language": os.environ["LANG"],
+                                       "grampspath": gpath,
                                      }
             self.file_name = home_config
 
